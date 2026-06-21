@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gamified Activity Prompt Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #f7f5f0;
+    --card: #ffffff;
+    --ink: #20242b;
+    --ink-soft: #5b5e66;
+    --ink-faint: #8b8d92;
+    --rule: #dcd6c8;
+    --navy: #1f3a5f;
+    --navy-tint: #ebf0f6;
+    --oxblood: #7a2e2e;
+    --oxblood-tint: #f7ebea;
+    --gold: #a6803c;
+    --radius: 2px;
+    --serif: "Source Serif 4", Georgia, serif;
+    --sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: "IBM Plex Mono", "Courier New", monospace;
+  }
+
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior: auto; }
+    *{ transition: none !important; animation: none !important; }
+  }
+
+  body{
+    margin:0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a{ color: var(--navy); }
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    border-bottom: 1px solid var(--rule);
+    background: var(--card);
+  }
+  .masthead-inner{
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 48px 32px 36px;
+  }
+  .eyebrow{
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--oxblood);
+    margin: 0 0 14px;
+  }
+  h1{
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(28px, 4vw, 40px);
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+  .dek{
+    font-size: 16px;
+    color: var(--ink-soft);
+    max-width: 660px;
+    margin: 0;
+  }
+
+  /* ---------- Layout ---------- */
+  .layout{
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 36px 32px 96px;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+
+  .stepnav{
+    position: sticky;
+    top: 36px;
+  }
+  .stepnav ol{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 1px solid var(--rule);
+  }
+  .stepnav li{
+    position: relative;
+    padding: 10px 0 10px 20px;
+    cursor: pointer;
+  }
+  .stepnav li::before{
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: transparent;
+  }
+  .stepnav li.active::before{ background: var(--navy); }
+  .stepnav .num{
+    display: block;
+    font-family: var(--serif);
+    font-size: 13px;
+    color: var(--oxblood);
+    margin-bottom: 2px;
+  }
+  .stepnav .label{
+    display: block;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .stepnav li.active .label{ color: var(--ink); font-weight: 500; }
+  .stepnav .status{
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--rule);
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .stepnav li.complete .status{ background: var(--navy); }
+
+  .content{ min-width: 0; }
+
+  .step-card{
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 28px;
+  }
+  .step-card h2{
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 22px;
+    margin: 0 0 6px;
+  }
+  .step-card .step-sub{
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0 0 26px;
+  }
+
+  .step-actions{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+  }
+  .step-actions-right{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .step-actions-hint{
+    font-size: 12.5px;
+    color: var(--oxblood);
+    margin: 0;
+  }
+  .btn-next, .btn-back{
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 14px;
+    padding: 11px 22px;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  .btn-next{
+    background: var(--navy);
+    color: #fff;
+    border: 1px solid var(--navy);
+  }
+  .btn-next:disabled{
+    background: var(--rule);
+    border-color: var(--rule);
+    color: var(--ink-faint);
+    cursor: not-allowed;
+  }
+  .btn-next:focus-visible:not(:disabled), .btn-back:focus-visible{
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+  .btn-back{
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+  }
+  .btn-back:hover{ border-color: var(--navy); color: var(--navy); }
+
+  /* ---------- Form fields ---------- */
+  .field{ margin-bottom: 22px; }
+  .field label{
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 7px;
+    color: var(--ink);
+  }
+  .field label .req{ color: var(--oxblood); margin-left: 2px; }
+  .field .hint{
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin: 6px 0 0;
+  }
+  .field .warn{
+    font-size: 12.5px;
+    color: var(--oxblood);
+    margin: 6px 0 0;
+    display: none;
+  }
+  .field.invalid .warn{ display: block; }
+  .field.invalid input,
+  .field.invalid select{ border-color: var(--oxblood); }
+
+  input[type="text"], select{
+    width: 100%;
+    padding: 10px 12px;
+    font-family: var(--sans);
+    font-size: 14.5px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+  }
+  input[type="text"]:focus-visible, select:focus-visible{
+    outline: 2px solid var(--gold);
+    outline-offset: 1px;
+  }
+  select{ appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%); background-position: calc(100% - 18px) center, calc(100% - 13px) center; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
+
+  .row-2{ display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 640px){ .row-2{ grid-template-columns: 1fr; } }
+
+  .segmented{
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .segmented button{
+    flex: 1;
+    min-width: 25%;
+    padding: 10px 8px;
+    background: var(--paper);
+    border: none;
+    border-left: 1px solid var(--rule);
+    font-family: var(--sans);
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .segmented button:first-child{ border-left: none; }
+  .segmented button.selected{
+    background: var(--navy);
+    color: #fff;
+    font-weight: 500;
+  }
+  .segmented button:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px; }
+
+  .range-wrap{ display: flex; align-items: center; gap: 16px; }
+  input[type="range"]{
+    flex: 1;
+    accent-color: var(--navy);
+  }
+  .range-value{
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--navy);
+    min-width: 86px;
+    text-align: right;
+  }
+
+  /* ---------- Selector cards (SLA / activities) ---------- */
+  .subsection{ margin-bottom: 30px; }
+  .subsection:last-child{ margin-bottom: 0; }
+  .subsection-title{
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .subsection-sub{
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+  }
+
+  .rec-panel{
+    background: var(--navy-tint);
+    border: 1px solid var(--navy);
+    border-radius: var(--radius);
+    padding: 24px 24px 22px;
+  }
+  .rec-panel .subsection-title{ font-size: 18px; }
+  .rec-panel .subsection-sub{ color: var(--ink); opacity: 0.78; }
+
+  .rec-basis{
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.03em;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+  }
+
+  .rec-grid{
+    display: grid;
+    grid-template-columns: 1.35fr 1fr 1fr;
+    gap: 14px;
+    align-items: stretch;
+  }
+  @media (max-width: 900px){ .rec-grid{ grid-template-columns: 1fr; } }
+
+  .rec-card{
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .rec-card.rec-best{
+    border: 2px solid var(--gold);
+    border-top: 4px solid var(--gold);
+    padding: 22px;
+    box-shadow: 0 4px 16px rgba(166,128,60,0.16);
+  }
+  .rec-card:not(.rec-best) .rec-combo{ font-size: 14px; }
+  .rec-card:not(.rec-best) .rec-rationale{ font-size: 12.5px; }
+  .rec-card.active{
+    border-color: var(--navy);
+    border-top-color: var(--navy);
+    background: var(--navy-tint);
+  }
+  .rec-card.rec-best.active{
+    box-shadow: 0 4px 16px rgba(31,58,95,0.18);
+  }
+  .rec-card.fallback{
+    border-style: dashed;
+    border-top-style: dashed;
+  }
+  .rec-rank{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--oxblood);
+    margin: 0;
+  }
+  .rec-card.rec-best .rec-rank{
+    display: inline-block;
+    color: #fff;
+    background: var(--gold);
+    padding: 3px 11px;
+    border-radius: 20px;
+    letter-spacing: 0.08em;
+  }
+  .rec-card.fallback .rec-rank{ color: var(--ink-faint); }
+  .rec-combo{
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 16.5px;
+    line-height: 1.32;
+    margin: 0;
+  }
+  .rec-card.rec-best .rec-combo{ font-size: 18px; }
+  .rec-combo .plus{
+    color: var(--ink-faint);
+    font-weight: 400;
+    font-family: var(--sans);
+  }
+  .fit-meter{ display: flex; gap: 2px; }
+  .star{ color: var(--rule); font-size: 14px; line-height: 1; }
+  .star.filled{ color: var(--gold); }
+  .rec-card.active .star.filled{ color: var(--navy); }
+  .rec-card.fallback .star.filled,
+  .rec-card.fallback.active .star.filled{ color: var(--ink-faint); }
+  .rec-rationale{
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin: 0;
+    flex: 1;
+  }
+  .btn-use{
+    align-self: flex-start;
+    font-family: var(--sans);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--navy);
+    background: var(--card);
+    border: 1px solid var(--navy);
+    padding: 7px 13px;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  .rec-card.rec-best .btn-use{ background: var(--navy); color: #fff; }
+  .rec-card.active .btn-use{ background: var(--navy); color: #fff; }
+  .btn-use:focus-visible{ outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .manual-disclosure{
+    margin-top: 28px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--card);
+  }
+  .manual-summary{
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+  .manual-summary::-webkit-details-marker{ display: none; }
+  .manual-summary::marker{ content: ""; }
+  .manual-summary-toggle{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--navy);
+    white-space: nowrap;
+  }
+  .manual-disclosure-body{
+    padding: 6px 22px 22px;
+    border-top: 1px solid var(--rule);
+  }
+  .manual-disclosure-body .subsection{ margin-top: 22px; }
+
+  .card-grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 640px){ .card-grid{ grid-template-columns: 1fr; } }
+
+  .opt-card{
+    text-align: left;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    cursor: pointer;
+    font-family: var(--sans);
+    position: relative;
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+  .opt-card:hover{ border-color: var(--navy); }
+  .opt-card:focus-visible{ outline: 2px solid var(--gold); outline-offset: 2px; }
+  .opt-card.suggested{ border-left-color: var(--gold); }
+  .opt-card.selected{
+    background: var(--navy-tint);
+    border-color: var(--navy);
+    border-left-color: var(--navy);
+  }
+  .opt-name-row{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 20px;
+    margin: 0 0 3px;
+  }
+  .opt-card .opt-name{
+    font-weight: 600;
+    font-size: 14.5px;
+    color: var(--ink);
+    margin: 0;
+  }
+  .suggested-pill{
+    display: none;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    padding: 1px 7px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .opt-card.suggested .suggested-pill{ display: inline-block; }
+  .opt-card .opt-citation{
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--oxblood);
+    margin: 0 0 8px;
+  }
+  .opt-card .opt-desc{
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.45;
+  }
+  .opt-meta{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .opt-tag{
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .opt-card .check{
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid var(--rule);
+    background: var(--card);
+  }
+  .opt-card.selected .check{
+    background: var(--navy);
+    border-color: var(--navy);
+  }
+  .opt-card.selected .check::after{
+    content: "";
+    position: absolute;
+    left: 4px; top: 1px;
+    width: 5px; height: 8px;
+    border-right: 1.5px solid #fff;
+    border-bottom: 1.5px solid #fff;
+    transform: rotate(40deg);
+  }
+
+  /* ---------- Current selection bar ---------- */
+  .selection-bar{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 26px;
+    padding: 14px 18px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+  }
+  .selection-bar .sel-label{
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-right: 4px;
+  }
+  .selection-chip{
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    padding: 6px 13px;
+    border-radius: 20px;
+  }
+  .selection-chip.empty{
+    color: var(--ink-faint);
+    font-weight: 400;
+    font-style: italic;
+    border-style: dashed;
+  }
+
+  .conflict-warning{
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: var(--oxblood-tint);
+    border: 1px solid var(--oxblood);
+    border-radius: var(--radius);
+    color: var(--oxblood);
+    font-size: 13px;
+    line-height: 1.5;
+    display: none;
+  }
+  .conflict-warning.show{ display: block; }
+
+  /* ---------- Generate / output ---------- */
+  .generate-row{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .btn-generate{
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--navy);
+    border: none;
+    padding: 14px 30px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    letter-spacing: 0.01em;
+  }
+  .btn-generate:hover{ background: #16304f; }
+  .btn-generate:focus-visible{ outline: 2px solid var(--gold); outline-offset: 2px; }
+  .generate-note{
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  .output-wrap{
+    margin-top: 26px;
+    position: relative;
+    display: none;
+  }
+  .output-wrap.show{ display: block; }
+
+  .stamp{
+    position: absolute;
+    top: -14px;
+    right: 18px;
+    border: 1.5px dashed var(--oxblood);
+    color: var(--oxblood);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    transform: rotate(-6deg);
+    background: var(--card);
+    z-index: 1;
+  }
+
+  .output-card{
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--oxblood);
+    border-radius: var(--radius);
+    background: #fffefb;
+  }
+  .output-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .output-title{
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .btn-copy{
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--navy);
+    background: var(--navy-tint);
+    border: 1px solid var(--navy);
+    padding: 7px 14px;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  .btn-copy:hover{ background: #dde7f1; }
+  .btn-copy.copied{ background: var(--navy); color: #fff; }
+
+  .output-text{
+    margin: 0;
+    padding: 22px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 520px;
+    overflow-y: auto;
+  }
+
+  footer{
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-faint);
+    padding: 0 32px 48px;
+  }
+
+  @media (max-width: 800px){
+    .layout{ grid-template-columns: 1fr; gap: 24px; }
+    .stepnav{ position: static; }
+    .stepnav ol{
+      display: flex;
+      border-left: none;
+      border-bottom: 1px solid var(--rule);
+      gap: 4px;
+    }
+    .stepnav li{ padding: 8px 12px; flex: 1; }
+    .stepnav li::before{ left: 0; right: 0; top: auto; bottom: -1px; width: auto; height: 2px; }
+    .step-card{ padding: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <p class="eyebrow">A reference tool for evidence-informed prompt design</p>
+    <h1>Gamified Activity Prompt Builder</h1>
+    <p class="dek">Work through a learner profile, get matched to a research-backed SLA principle and classroom activity, and assemble everything into one structured prompt for a teacher-led, screen-display activity — ready to paste into Claude.</p>
+  </div>
+</header>
+
+<div class="layout">
+
+  <nav class="stepnav" aria-label="Steps">
+    <ol>
+      <li data-step="1" class="active"><span class="status"></span><span class="num">I.</span><span class="label">Learner Profile</span></li>
+      <li data-step="2"><span class="status"></span><span class="num">II.</span><span class="label">Pedagogical &amp; Activity Design</span></li>
+      <li data-step="3"><span class="status"></span><span class="num">III.</span><span class="label">Generate</span></li>
+    </ol>
+  </nav>
+
+  <main class="content">
+
+    <!-- STEP 1 -->
+    <section class="step-card" id="step1" data-section="1">
+      <h2>I. Learner Profile</h2>
+      <p class="step-sub">Describe the class and the lesson moment this activity is for.</p>
+
+      <div class="row-2">
+        <div class="field">
+          <label for="level">CEFR level</label>
+          <select id="level">
+            <option value="A1">A1 — Beginner</option>
+            <option value="A2">A2 — Elementary</option>
+            <option value="B1" selected>B1 — Intermediate</option>
+            <option value="B2">B2 — Upper Intermediate</option>
+            <option value="C1">C1 — Advanced</option>
+            <option value="C2">C2 — Proficient</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="duration">Session duration</label>
+          <div class="range-wrap">
+            <input type="range" id="duration" min="20" max="120" step="5" value="45">
+            <span class="range-value" id="durationValue">45 minutes</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" id="topicField">
+        <label for="topic">Topic<span class="req">*</span></label>
+        <input type="text" id="topic" placeholder="e.g., negotiating a hotel booking">
+        <p class="warn">Add a topic before generating.</p>
+      </div>
+
+      <div class="field" id="structureField">
+        <label for="structure">Target language structure<span class="req">*</span></label>
+        <input type="text" id="structure" placeholder="e.g., second conditional for hypothetical advice">
+        <p class="warn">Add a target structure before generating.</p>
+      </div>
+
+      <div class="field">
+        <label>Skill focus</label>
+        <div class="segmented" id="skillSegmented" role="group" aria-label="Skill focus">
+          <button type="button" data-skill="Speaking" class="selected">Speaking</button>
+          <button type="button" data-skill="Listening">Listening</button>
+          <button type="button" data-skill="Reading">Reading</button>
+          <button type="button" data-skill="Writing">Writing</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Lesson phase</label>
+        <div class="segmented" id="phaseSegmented" role="group" aria-label="Lesson phase">
+          <button type="button" data-phase="Presentation">Presentation</button>
+          <button type="button" data-phase="Practice" class="selected">Practice</button>
+          <button type="button" data-phase="Production">Production</button>
+        </div>
+        <p class="hint">Presentation introduces the form, Practice rehearses it with support, Production uses it freely.</p>
+      </div>
+
+      <div class="field" style="margin-bottom:0;">
+        <label>Class format</label>
+        <div class="segmented" id="formatSegmented" role="group" aria-label="Class format">
+          <button type="button" data-format="Individual">Individual</button>
+          <button type="button" data-format="Pair">Pair</button>
+          <button type="button" data-format="Group">Group</button>
+          <button type="button" data-format="Whole Class" class="selected">Whole Class</button>
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <p class="step-actions-hint" id="hint1"></p>
+        <button type="button" class="btn-next" id="next1">Next: Pedagogical &amp; Activity Design →</button>
+      </div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="step-card" id="step2" data-section="2">
+      <h2>II. Pedagogical &amp; Activity Design</h2>
+      <p class="step-sub">Choose the theory and classroom procedure that should drive the activity — or let the tool suggest a pairing based on your profile.</p>
+
+      <div class="rec-panel">
+        <p class="subsection-title">Suggested combinations</p>
+        <p class="subsection-sub">Ranked using your level, skill focus, lesson phase, and class format. The best match is sized and highlighted to stand out.</p>
+        <p class="rec-basis" id="recBasis"></p>
+        <div class="rec-grid" id="recGrid"></div>
+      </div>
+
+      <details class="manual-disclosure" id="manualDisclosure">
+        <summary class="manual-summary">
+          <span>Prefer to choose the principle and activity yourself?</span>
+          <span class="manual-summary-toggle" id="manualToggleLabel">Choose manually ▾</span>
+        </summary>
+        <div class="manual-disclosure-body">
+          <div class="subsection">
+            <p class="subsection-title">SLA principle</p>
+            <p class="subsection-sub">This becomes the theoretical foundation the AI is instructed to apply.</p>
+            <div class="card-grid" id="principleGrid"></div>
+            <p class="warn" id="principleWarn" style="display:none; margin-top:10px;">Choose an SLA principle before generating.</p>
+          </div>
+
+          <div class="subsection">
+            <p class="subsection-title">Classroom activity</p>
+            <p class="subsection-sub">This becomes the on-screen procedure the AI is instructed to build, slide by slide. Skills and formats shown are what each activity actually supports.</p>
+            <div class="card-grid" id="activityGrid"></div>
+            <p class="warn" id="activityWarn" style="display:none; margin-top:10px;">Choose a classroom activity before generating.</p>
+          </div>
+        </div>
+      </details>
+
+      <div class="selection-bar">
+        <span class="sel-label">Current selection</span>
+        <span class="selection-chip empty" id="chipPrinciple">No principle selected</span>
+        <span class="selection-chip empty" id="chipActivity">No activity selected</span>
+      </div>
+      <p class="conflict-warning" id="conflictWarning"></p>
+
+      <div class="step-actions">
+        <button type="button" class="btn-back" id="back2">← Back</button>
+        <div class="step-actions-right">
+          <p class="step-actions-hint" id="hint2"></p>
+          <button type="button" class="btn-next" id="next2">Next: Generate →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="step-card" id="step3" data-section="3">
+      <h2>III. Generate</h2>
+      <p class="step-sub">Assemble everything above into one structured prompt.</p>
+
+      <div class="step-actions" style="border-top:none; padding-top:0; margin-top:0; margin-bottom:24px; justify-content:flex-start;">
+        <button type="button" class="btn-back" id="back3">← Back</button>
+      </div>
+
+      <div class="generate-row">
+        <button class="btn-generate" id="generateBtn">Generate Prompt</button>
+        <span class="generate-note">Produces a teacher-led, screen-display prompt for Claude</span>
+      </div>
+
+      <div class="output-wrap" id="outputWrap">
+        <div class="stamp">Evidence-informed</div>
+        <div class="output-card">
+          <div class="output-header">
+            <span class="output-title">Prompt — for use with Claude</span>
+            <button class="btn-copy" id="copyBtn">Copy</button>
+          </div>
+          <pre class="output-text" id="outputText"></pre>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>Built for lesson preparation. Review every generated activity before classroom use.</footer>
+
+<script>
+(function(){
+
+  var LEVELS = ["A1","A2","B1","B2","C1","C2"];
+  function levelRank(level){ return LEVELS.indexOf(level) + 1; }
+
+  var MAX_SCORE = 9;
+
+  // ---------------- SLA principles ----------------
+  var principles = [
+    {
+      id: "input",
+      name: "Comprehensible Input",
+      citation: "Krashen, 1985",
+      desc: "Acquisition happens when input is slightly beyond the learner's current level and meaning is clear from context, not from explicit grammar explanation.",
+      bestPhases: ["Presentation"],
+      bestFormats: ["Whole Class", "Individual"],
+      bestSkills: ["Listening", "Reading"],
+      minLevelRank: 1,
+      whyFragment: "keeps input just above the learners' current level so meaning stays accessible without translation.",
+      application: function(s){
+        return "Calibrate all language input to roughly one notch above " + s.level + ", and make meaning recoverable through visuals, context, or repetition rather than translation or rule explanation.";
+      }
+    },
+    {
+      id: "output",
+      name: "Output Hypothesis",
+      citation: "Swain, 1985 / 1995",
+      desc: "Producing language, not just receiving it, forces learners to notice gaps between what they want to say and what they can say.",
+      bestPhases: ["Production"],
+      bestFormats: ["Pair", "Group"],
+      bestSkills: ["Speaking", "Writing"],
+      minLevelRank: 2,
+      whyFragment: "pushes learners to produce language themselves, which is where gaps in their interlanguage surface.",
+      application: function(s){
+        return "Require the learner to actively produce language at each stage rather than only recognise or select it, and build in at least one moment where they must reformulate or expand their own output.";
+      }
+    },
+    {
+      id: "noticing",
+      name: "Noticing Hypothesis",
+      citation: "Schmidt, 1990",
+      desc: "A language feature must be consciously attended to before it can become part of the learner's internal grammar.",
+      bestPhases: ["Presentation", "Practice"],
+      bestFormats: ["Whole Class", "Individual"],
+      bestSkills: ["Reading", "Listening"],
+      minLevelRank: 1,
+      whyFragment: "draws conscious attention to the form before learners are asked to use it.",
+      application: function(s){
+        return "Draw explicit attention to " + (s.structure || "the target structure") + " at key moments, for example by highlighting it, contrasting correct and incorrect forms, or prompting the learner to spot it before producing it.";
+      }
+    },
+    {
+      id: "interaction",
+      name: "Interaction Hypothesis",
+      citation: "Long, 1996",
+      desc: "Negotiating meaning with another speaker, through clarification and feedback, drives language development.",
+      bestPhases: ["Practice", "Production"],
+      bestFormats: ["Pair", "Group"],
+      bestSkills: ["Speaking", "Listening"],
+      minLevelRank: 2,
+      whyFragment: "uses negotiated meaning, the back-and-forth of checking and clarifying, as the engine of development.",
+      application: function(s){
+        return "Build in negotiated meaning, such as clarification requests, comprehension checks, or a simulated conversational partner that responds differently depending on the learner's input.";
+      }
+    },
+    {
+      id: "focusonform",
+      name: "Focus on Form",
+      citation: "Long, 1991; DeKeyser, 2007",
+      desc: "Brief, integrated attention to a grammatical form inside a meaning-focused task helps that form become automatic.",
+      bestPhases: ["Practice"],
+      bestFormats: ["Individual", "Whole Class"],
+      bestSkills: ["Writing", "Speaking"],
+      minLevelRank: 2,
+      whyFragment: "keeps brief attention on the form inside a real communicative task rather than an isolated drill.",
+      application: function(s){
+        return "Embed short, targeted attention to " + (s.structure || "the target structure") + " inside a meaning-focused task rather than as an isolated drill, with enough repeated practice for it to become automatic.";
+      }
+    },
+    {
+      id: "sct",
+      name: "Sociocultural Theory (ZPD)",
+      citation: "Vygotsky, 1978; Lantolf et al., 2020",
+      desc: "Learners accomplish more with structured support than alone, and that support should fade as competence grows.",
+      bestPhases: ["Practice", "Production"],
+      bestFormats: ["Pair", "Group"],
+      bestSkills: ["Speaking", "Writing"],
+      minLevelRank: 1,
+      whyFragment: "relies on scaffolding from a partner, group, or teacher that can be withdrawn as competence grows.",
+      application: function(s){
+        return "Provide scaffolding such as sentence starters, hints, or a model example early on, and gradually withdraw that support as the learner progresses through the activity.";
+      }
+    }
+  ];
+
+  // ---------------- Classroom activities ----------------
+  var activities = [
+    {
+      id: "infogap",
+      name: "Information Gap",
+      desc: "Each pair or group holds half the information; they must ask and answer questions to complete the full picture.",
+      skills: ["Speaking", "Listening"],
+      formats: ["Pair", "Group"],
+      phases: ["Practice", "Production"],
+      minLevelRank: 2,
+      application: function(s){
+        return "Display Partner A's information on one slide and Partner B's on the next so each pair only sees their own half; include an instruction slide telling them to exchange information aloud using " + (s.structure || "the target structure") + ", then a reveal slide showing the completed information for the class to self-check.";
+      }
+    },
+    {
+      id: "spotdiff",
+      name: "Spot the Difference",
+      desc: "Two near-identical pictures or texts are displayed; students describe and compare to find what's changed.",
+      skills: ["Speaking", "Listening"],
+      formats: ["Pair", "Whole Class"],
+      phases: ["Practice"],
+      minLevelRank: 1,
+      application: function(s){
+        return "Show the two versions on screen (side by side if space allows, or as two consecutive slides students compare from memory), prompt the class to describe what they notice aloud, and reveal each difference one at a time as it is correctly identified.";
+      }
+    },
+    {
+      id: "roleplay",
+      name: "Role-Play",
+      desc: "Students take on roles in a defined scenario and improvise the conversation using the target language.",
+      skills: ["Speaking"],
+      formats: ["Pair", "Group"],
+      phases: ["Production"],
+      minLevelRank: 1,
+      application: function(s){
+        return "Display the scenario and each role's brief on one slide, give pairs or small groups time to prepare and perform while the slide stays visible as a reference, then show a debrief slide highlighting useful language for " + (s.structure || "the target structure") + ".";
+      }
+    },
+    {
+      id: "discussion",
+      name: "Discussion / Debate",
+      desc: "A displayed prompt or claim drives structured small-group or whole-class discussion, with the teacher moderating.",
+      skills: ["Speaking"],
+      formats: ["Whole Class", "Group"],
+      phases: ["Production"],
+      minLevelRank: 2,
+      application: function(s){
+        return "Display the discussion prompt or debate motion in large text, with two or three supporting questions revealed one at a time so the teacher can pace the conversation.";
+      }
+    },
+    {
+      id: "picturestory",
+      name: "Picture Prompt Storytelling",
+      desc: "An image sequence is displayed; students build a story aloud or in writing, one frame at a time.",
+      skills: ["Speaking", "Writing"],
+      formats: ["Whole Class", "Group", "Individual"],
+      phases: ["Practice", "Production"],
+      minLevelRank: 1,
+      application: function(s){
+        return "Reveal an image sequence one frame at a time, prompting the class or small groups to build the story aloud frame by frame, then show a model version on the final slide for comparison.";
+      }
+    },
+    {
+      id: "dictogloss",
+      name: "Dictogloss",
+      desc: "The teacher reads a short text twice at natural speed; students note key words individually, then reconstruct it together.",
+      skills: ["Listening", "Writing"],
+      formats: ["Pair", "Group"],
+      phases: ["Practice"],
+      minLevelRank: 3,
+      application: function(s){
+        return "Include a short text for the teacher to read aloud twice (in the speaker notes or a teacher-only slide), follow with a blank slide for the class to reconstruct the text collaboratively, then reveal the original for comparison.";
+      }
+    },
+    {
+      id: "errorcorrect",
+      name: "Spot the Error",
+      desc: "Sentences containing deliberate errors are displayed; students identify and correct them before the answer is revealed.",
+      skills: ["Reading", "Writing"],
+      formats: ["Whole Class", "Individual"],
+      phases: ["Presentation", "Practice"],
+      minLevelRank: 2,
+      application: function(s){
+        return "Display sentences containing errors in " + (s.structure || "the target structure") + " one at a time, let the class identify and correct each one aloud or by show of hands, then reveal the corrected version with a one-line explanation.";
+      }
+    },
+    {
+      id: "sorting",
+      name: "Categorisation / Sorting Task",
+      desc: "Words, sentences, or images are displayed for students to sort into categories that reveal a grammar or vocabulary pattern.",
+      skills: ["Reading", "Writing"],
+      formats: ["Individual", "Pair", "Whole Class"],
+      phases: ["Presentation", "Practice"],
+      minLevelRank: 1,
+      application: function(s){
+        return "Display the items to sort and the category headers, invite the class or pairs to call out where each item belongs, then reveal the completed sort with a brief explanation of the pattern.";
+      }
+    },
+    {
+      id: "hotseat",
+      name: "Hot Seat / Q&A Chain",
+      desc: "One student sits facing the class and answers rapid-fire questions from classmates on a displayed topic.",
+      skills: ["Speaking", "Listening"],
+      formats: ["Whole Class"],
+      phases: ["Practice", "Production"],
+      minLevelRank: 2,
+      application: function(s){
+        return "Display the hot-seat topic and a bank of starter questions the class can draw from, leaving space on screen for the teacher to note strong answers as the activity runs.";
+      }
+    },
+    {
+      id: "sentencerace",
+      name: "Sentence Race",
+      desc: "Teams race to produce correct sentences using a displayed target structure, with points for speed and accuracy.",
+      skills: ["Writing", "Speaking"],
+      formats: ["Group", "Whole Class"],
+      phases: ["Practice"],
+      minLevelRank: 1,
+      application: function(s){
+        return "Display " + (s.structure || "the target structure") + " and a visible timer, split the class into teams, and close with a scoring slide for teams to report their best sentence.";
+      }
+    }
+  ];
+
+  var state = {
+    level: "B1",
+    duration: 45,
+    topic: "",
+    structure: "",
+    skill: "Speaking",
+    phase: "Practice",
+    format: "Whole Class",
+    principleId: null,
+    activityId: null
+  };
+
+  function el(id){ return document.getElementById(id); }
+  function findById(list, id){
+    for (var i = 0; i < list.length; i++){ if (list[i].id === id) return list[i]; }
+    return null;
+  }
+
+  // ---------------- Manual card grids ----------------
+  function buildCardGrid(containerId, items, type){
+    var container = el(containerId);
+    items.forEach(function(item){
+      var card = document.createElement("button");
+      card.type = "button";
+      card.className = "opt-card";
+      card.setAttribute("data-id", item.id);
+
+      var nameRow = document.createElement("div");
+      nameRow.className = "opt-name-row";
+
+      var name = document.createElement("p");
+      name.className = "opt-name";
+      name.textContent = item.name;
+      nameRow.appendChild(name);
+
+      var pill = document.createElement("span");
+      pill.className = "suggested-pill";
+      pill.textContent = "Suggested";
+      nameRow.appendChild(pill);
+
+      card.appendChild(nameRow);
+
+      if (item.citation){
+        var cite = document.createElement("p");
+        cite.className = "opt-citation";
+        cite.textContent = item.citation;
+        card.appendChild(cite);
+      }
+
+      var desc = document.createElement("p");
+      desc.className = "opt-desc";
+      desc.textContent = item.desc;
+      card.appendChild(desc);
+
+      var meta = document.createElement("div");
+      meta.className = "opt-meta";
+      if (type === "activity"){
+        var tagSkills = document.createElement("span");
+        tagSkills.className = "opt-tag";
+        tagSkills.textContent = "Skills: " + item.skills.join(", ");
+        meta.appendChild(tagSkills);
+
+        var tagFormats = document.createElement("span");
+        tagFormats.className = "opt-tag";
+        tagFormats.textContent = "Format: " + item.formats.join(", ");
+        meta.appendChild(tagFormats);
+      } else {
+        var tagPhase = document.createElement("span");
+        tagPhase.className = "opt-tag";
+        tagPhase.textContent = "Best fit: " + item.bestPhases.join(", ") + " phase";
+        meta.appendChild(tagPhase);
+      }
+      card.appendChild(meta);
+
+      var check = document.createElement("span");
+      check.className = "check";
+      card.appendChild(check);
+
+      card.addEventListener("click", function(){
+        if (type === "principle"){ setPrinciple(item.id); }
+        else { setActivity(item.id); }
+      });
+
+      container.appendChild(card);
+    });
+  }
+
+  buildCardGrid("principleGrid", principles, "principle");
+  buildCardGrid("activityGrid", activities, "activity");
+
+  function applySelectedInGrid(containerId, id){
+    var cards = el(containerId).querySelectorAll(".opt-card");
+    cards.forEach(function(c){
+      c.classList.toggle("selected", c.getAttribute("data-id") === id);
+    });
+  }
+
+  function setPrinciple(id){
+    state.principleId = id;
+    applySelectedInGrid("principleGrid", id);
+    el("principleWarn").style.display = "none";
+    refreshSelectionUI();
+  }
+
+  function setActivity(id){
+    state.activityId = id;
+    applySelectedInGrid("activityGrid", id);
+    el("activityWarn").style.display = "none";
+    refreshSelectionUI();
+  }
+
+  function selectCombo(principleId, activityId){
+    setPrinciple(principleId);
+    setActivity(activityId);
+  }
+
+  // ---------------- Compatibility checks (shared by suggestions + manual warning) ----------------
+  function isFormatCompatible(a, input){ return a.formats.indexOf(input.format) !== -1; }
+  function isSkillCompatible(a, input){ return a.skills.indexOf(input.skill) !== -1; }
+  function isActivityEligible(a, input){ return isFormatCompatible(a, input) && isSkillCompatible(a, input); }
+
+  function describeFormats(formats){
+    var map = { "Individual": "individual work", "Pair": "a partner", "Group": "a group", "Whole Class": "the whole class" };
+    var parts = formats.map(function(f){ return map[f] || f.toLowerCase(); });
+    if (parts.length === 1) return parts[0];
+    if (parts.length === 2) return parts[0] + " or " + parts[1];
+    return parts.slice(0, -1).join(", ") + ", or " + parts[parts.length - 1];
+  }
+
+  function getCompatibilityIssues(a, input){
+    var issues = [];
+    if (!isFormatCompatible(a, input)){
+      issues.push(a.name + " normally needs " + describeFormats(a.formats) + " — it can't be run as true " + input.format.toLowerCase() + " work without adapting it.");
+    }
+    if (!isSkillCompatible(a, input)){
+      issues.push(a.name + " is built around " + a.skills.join(" and ") + "; it doesn't primarily target " + input.skill.toLowerCase() + ".");
+    }
+    return issues;
+  }
+
+  // ---------------- Recommendation engine ----------------
+  // Format and skill are hard constraints (checked via isActivityEligible before
+  // any scoring happens) because an activity is structurally unable to run without
+  // the right format or skill — e.g. Information Gap cannot be done solo. Phase
+  // stays a soft scoring factor since activities can reasonably flex across
+  // adjacent lesson stages.
+  function scoreCombo(p, a, input){
+    var score = 0;
+    var lvl = levelRank(input.level);
+    if (a.phases.indexOf(input.phase) !== -1) score += 3;
+    if (p.bestPhases.indexOf(input.phase) !== -1) score += 2;
+    if (p.bestFormats.indexOf(input.format) !== -1) score += 1;
+    if (p.bestSkills.indexOf(input.skill) !== -1) score += 1;
+    score += (lvl >= a.minLevelRank) ? 1 : -2;
+    score += (lvl >= p.minLevelRank) ? 1 : -1;
+    return score;
+  }
+
+  function tryPick(list, chosen, usedP, usedA, requirePDistinct, requireADistinct){
+    for (var i = 0; i < list.length && chosen.length < 3; i++){
+      var c = list[i];
+      if (chosen.indexOf(c) !== -1) continue;
+      if (requirePDistinct && usedP[c.principle.id]) continue;
+      if (requireADistinct && usedA[c.activity.id]) continue;
+      chosen.push(c);
+      usedP[c.principle.id] = true;
+      usedA[c.activity.id] = true;
+    }
+  }
+
+  function computeRecommendations(input){
+    var eligibleActivities = activities.filter(function(a){ return isActivityEligible(a, input); });
+
+    var combos = [];
+    eligibleActivities.forEach(function(a){
+      principles.forEach(function(p){
+        combos.push({ principle: p, activity: a, score: scoreCombo(p, a, input), fallback: false });
+      });
+    });
+    combos.sort(function(x, y){ return y.score - x.score; });
+
+    var chosen = [];
+    var usedP = {};
+    var usedA = {};
+    tryPick(combos, chosen, usedP, usedA, true, true);
+    tryPick(combos, chosen, usedP, usedA, true, false);
+    tryPick(combos, chosen, usedP, usedA, false, false);
+
+    // Under-served profile: no (or too few) activities genuinely support this
+    // format/skill pairing. Pad remaining slots with the closest available
+    // combos, ranked by how close they come, and flag them as fallback so the
+    // UI never presents them with the same confidence as a real match.
+    if (chosen.length < 3){
+      var ineligibleActivities = activities.filter(function(a){ return !isActivityEligible(a, input); });
+      var fallbackCombos = [];
+      ineligibleActivities.forEach(function(a){
+        principles.forEach(function(p){
+          var closeness = scoreCombo(p, a, input);
+          if (isFormatCompatible(a, input)) closeness += 3;
+          if (isSkillCompatible(a, input)) closeness += 3;
+          fallbackCombos.push({ principle: p, activity: a, score: closeness, fallback: true });
+        });
+      });
+      fallbackCombos.sort(function(x, y){ return y.score - x.score; });
+      tryPick(fallbackCombos, chosen, usedP, usedA, true, true);
+      tryPick(fallbackCombos, chosen, usedP, usedA, true, false);
+      tryPick(fallbackCombos, chosen, usedP, usedA, false, false);
+    }
+
+    return chosen.slice(0, 3);
+  }
+
+  function explain(p, a, input){
+    var parts = [];
+    var formatOk = isFormatCompatible(a, input);
+    var skillOk = isSkillCompatible(a, input);
+
+    if (formatOk && skillOk){
+      parts.push(a.name + " is built around " + input.format.toLowerCase() + " work and centres " + input.skill.toLowerCase() + ", matching your profile directly.");
+    } else if (formatOk && !skillOk){
+      parts.push(a.name + " is built around " + input.format.toLowerCase() + " work, but it's designed for " + a.skills.join(" and ") + " rather than " + input.skill.toLowerCase() + ".");
+    } else if (!formatOk && skillOk){
+      parts.push(a.name + " centres " + input.skill.toLowerCase() + ", but it normally needs " + describeFormats(a.formats) + " rather than " + input.format.toLowerCase() + " work.");
+    } else {
+      parts.push(a.name + " normally needs " + describeFormats(a.formats) + " and centres " + a.skills.join(" and ") + " — it doesn't line up with " + input.format.toLowerCase() + " " + input.skill.toLowerCase() + " work as given.");
+    }
+
+    if (a.phases.indexOf(input.phase) !== -1){
+      parts.push("It's a natural fit for the " + input.phase.toLowerCase() + " stage of the lesson.");
+    } else {
+      parts.push("It can be adapted for the " + input.phase.toLowerCase() + " stage with a little extra scaffolding.");
+    }
+    parts.push(p.name + " (" + p.citation + ") " + p.whyFragment);
+    return parts.join(" ");
+  }
+
+  function starCountFromScore(score){
+    return Math.max(1, Math.min(5, Math.round((score / MAX_SCORE) * 5)));
+  }
+
+  function appendStars(container, score){
+    var filled = starCountFromScore(score);
+    for (var i = 1; i <= 5; i++){
+      var star = document.createElement("span");
+      star.className = "star" + (i <= filled ? " filled" : "");
+      star.textContent = i <= filled ? "★" : "☆";
+      container.appendChild(star);
+    }
+    container.setAttribute("aria-label", filled + " out of 5 fit rating");
+  }
+
+  var currentRecs = [];
+
+  function renderRecommendations(){
+    var input = { level: state.level, skill: state.skill, phase: state.phase, format: state.format };
+    currentRecs = computeRecommendations(input);
+
+    el("recBasis").textContent = "Based on " + state.level + " · " + state.skill + " · " + state.phase + " phase · " + state.format + " format";
+
+    var grid = el("recGrid");
+    grid.innerHTML = "";
+    var rankLabels = ["Best match", "Strong fit", "Good fit"];
+
+    currentRecs.forEach(function(r, idx){
+      var card = document.createElement("div");
+      card.className = "rec-card";
+      if (idx === 0) card.classList.add("rec-best");
+      if (r.fallback) card.classList.add("fallback");
+      card.setAttribute("data-principle", r.principle.id);
+      card.setAttribute("data-activity", r.activity.id);
+
+      var rank = document.createElement("p");
+      rank.className = "rec-rank";
+      rank.textContent = r.fallback ? "Closest available — adapt as needed" : (rankLabels[idx] || "Suggested");
+      card.appendChild(rank);
+
+      var combo = document.createElement("p");
+      combo.className = "rec-combo";
+      combo.appendChild(document.createTextNode(r.principle.name));
+      var plus = document.createElement("span");
+      plus.className = "plus";
+      plus.textContent = " + ";
+      combo.appendChild(plus);
+      combo.appendChild(document.createTextNode(r.activity.name));
+      card.appendChild(combo);
+
+      var stars = document.createElement("div");
+      stars.className = "fit-meter";
+      appendStars(stars, r.score);
+      card.appendChild(stars);
+
+      var rationale = document.createElement("p");
+      rationale.className = "rec-rationale";
+      rationale.textContent = explain(r.principle, r.activity, input);
+      card.appendChild(rationale);
+
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn-use";
+      btn.textContent = "Use this combination";
+      btn.addEventListener("click", function(){ selectCombo(r.principle.id, r.activity.id); });
+      card.appendChild(btn);
+
+      grid.appendChild(card);
+    });
+
+    applySuggestedFlags(currentRecs);
+    refreshSelectionUI();
+  }
+
+  function applySuggestedFlags(recs){
+    var usedP = {};
+    var usedA = {};
+    recs.forEach(function(r){ usedP[r.principle.id] = true; usedA[r.activity.id] = true; });
+
+    el("principleGrid").querySelectorAll(".opt-card").forEach(function(c){
+      c.classList.toggle("suggested", !!usedP[c.getAttribute("data-id")]);
+    });
+    el("activityGrid").querySelectorAll(".opt-card").forEach(function(c){
+      c.classList.toggle("suggested", !!usedA[c.getAttribute("data-id")]);
+    });
+  }
+
+  function refreshSelectionUI(){
+    var p = findById(principles, state.principleId);
+    var a = findById(activities, state.activityId);
+
+    var chipP = el("chipPrinciple");
+    if (p){ chipP.textContent = p.name; chipP.classList.remove("empty"); }
+    else { chipP.textContent = "No principle selected"; chipP.classList.add("empty"); }
+
+    var chipA = el("chipActivity");
+    if (a){ chipA.textContent = a.name; chipA.classList.remove("empty"); }
+    else { chipA.textContent = "No activity selected"; chipA.classList.add("empty"); }
+
+    document.querySelectorAll(".rec-card").forEach(function(c){
+      var match = c.getAttribute("data-principle") === state.principleId && c.getAttribute("data-activity") === state.activityId;
+      c.classList.toggle("active", match);
+    });
+
+    updateConflictWarning(a);
+    updateProgress();
+  }
+
+  function updateConflictWarning(a){
+    var warnEl = el("conflictWarning");
+    if (!a){ warnEl.classList.remove("show"); warnEl.textContent = ""; return; }
+    var issues = getCompatibilityIssues(a, { format: state.format, skill: state.skill });
+    if (issues.length === 0){ warnEl.classList.remove("show"); warnEl.textContent = ""; return; }
+    warnEl.textContent = "⚠ " + issues.join(" ");
+    warnEl.classList.add("show");
+  }
+
+  // ---------------- Learner profile inputs ----------------
+  el("level").addEventListener("change", function(e){
+    state.level = e.target.value;
+    renderRecommendations();
+  });
+
+  var durationInput = el("duration");
+  durationInput.addEventListener("input", function(e){
+    state.duration = e.target.value;
+    el("durationValue").textContent = e.target.value + " minutes";
+  });
+
+  el("topic").addEventListener("input", function(e){
+    state.topic = e.target.value;
+    if (e.target.value.trim()) el("topicField").classList.remove("invalid");
+    updateProgress();
+  });
+
+  el("structure").addEventListener("input", function(e){
+    state.structure = e.target.value;
+    if (e.target.value.trim()) el("structureField").classList.remove("invalid");
+    updateProgress();
+  });
+
+  function wireSegmented(containerId, dataAttr, stateKey){
+    var buttons = document.querySelectorAll("#" + containerId + " button");
+    buttons.forEach(function(btn){
+      btn.addEventListener("click", function(){
+        buttons.forEach(function(b){ b.classList.remove("selected"); });
+        btn.classList.add("selected");
+        state[stateKey] = btn.getAttribute(dataAttr);
+        renderRecommendations();
+      });
+    });
+  }
+
+  wireSegmented("skillSegmented", "data-skill", "skill");
+  wireSegmented("phaseSegmented", "data-phase", "phase");
+  wireSegmented("formatSegmented", "data-format", "format");
+
+  // ---------------- Prompt assembly ----------------
+  function buildPrompt(){
+    var principle = findById(principles, state.principleId);
+    var activity = findById(activities, state.activityId);
+    var lines = [];
+
+    lines.push("You are an expert instructional designer building a teacher-led classroom presentation for a language lesson.");
+    lines.push("The output is a single HTML file the teacher will display on a projector or TV. Students do not type into it themselves — they respond aloud, in pairs, in groups, or on paper while the teacher advances the screen.");
+    lines.push("");
+    lines.push("LEARNER PROFILE");
+    lines.push("— CEFR level: " + state.level);
+    lines.push("— Topic: " + state.topic);
+    lines.push("— Target language structure: " + state.structure);
+    lines.push("— Skill focus: " + state.skill);
+    lines.push("— Lesson phase: " + state.phase);
+    lines.push("— Class format: " + state.format);
+    lines.push("— Session duration: " + state.duration + " minutes");
+    lines.push("");
+    lines.push("THEORETICAL FOUNDATION");
+    lines.push("— SLA principle: " + principle.name + " (" + principle.citation + ")");
+    lines.push("— What this means: " + principle.desc);
+    lines.push("— How to apply it here: " + principle.application(state));
+    lines.push("");
+    lines.push("CLASSROOM ACTIVITY");
+    lines.push("— Activity type: " + activity.name);
+    lines.push("— How to apply it here: " + activity.application(state));
+    lines.push("");
+    lines.push("TASK");
+    lines.push("Build a single, self-contained HTML file (inline CSS and JavaScript, no external libraries or network requests) that:");
+    lines.push("1. Opens with a title slide naming the topic and target structure in " + state.level + "-appropriate language.");
+    lines.push("2. Is structured as a sequence of large-text, projector-legible slides or screens, advanced by the teacher (next/back buttons or arrow keys) — nothing requires individual student login or typing.");
+    lines.push("3. Uses " + activity.name + " as the core classroom procedure for the " + state.phase + " stage of the lesson, suited to " + state.format + " work.");
+    lines.push("4. Makes the SLA principle above operational, not decorative — follow the \"how to apply it here\" instruction exactly.");
+    lines.push("5. Treats " + state.skill + " as the primary skill practised, paced for " + state.duration + " minutes including time for the class to actually talk or work, not just read slides.");
+    lines.push("6. Includes reveal or answer slides the teacher controls (click or arrow key to show), rather than instant automatic feedback.");
+    lines.push("7. Closes with a brief recap slide appropriate for a " + state.level + " learner.");
+    lines.push("");
+    lines.push("CONSTRAINTS");
+    lines.push("— One HTML file, with text large enough to read from across a classroom, playable offline, no external dependencies.");
+    lines.push("— Built for teacher-led navigation, not individual self-paced student interaction.");
+    lines.push("— Vocabulary, instructions, and feedback calibrated to " + state.level + ".");
+    lines.push("— Content and pacing should genuinely fit a " + state.duration + "-minute session of " + state.format + " work, not be padded or rushed.");
+
+    return lines.join("\n");
+  }
+
+  function validate(){
+    var ok = true;
+    if (!state.topic.trim()){ el("topicField").classList.add("invalid"); ok = false; }
+    if (!state.structure.trim()){ el("structureField").classList.add("invalid"); ok = false; }
+    if (!state.principleId){ el("principleWarn").style.display = "block"; ok = false; }
+    if (!state.activityId){ el("activityWarn").style.display = "block"; ok = false; }
+    return ok;
+  }
+
+  el("generateBtn").addEventListener("click", function(){
+    if (!validate()){
+      if (el("topicField").classList.contains("invalid")){ showStep(1); el("topic").focus(); }
+      else if (el("structureField").classList.contains("invalid")){ showStep(1); el("structure").focus(); }
+      else { showStep(2); }
+      return;
+    }
+    var text = buildPrompt();
+    el("outputText").textContent = text;
+    el("outputWrap").classList.add("show");
+    updateProgress();
+    setTimeout(function(){
+      el("outputWrap").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 50);
+  });
+
+  el("copyBtn").addEventListener("click", function(){
+    var text = el("outputText").textContent;
+    var btn = el("copyBtn");
+    function showCopied(){
+      btn.textContent = "Copied";
+      btn.classList.add("copied");
+      setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1800);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(showCopied).catch(function(){ fallbackCopy(text, showCopied); });
+    } else {
+      fallbackCopy(text, showCopied);
+    }
+  });
+
+  function fallbackCopy(text, cb){
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); cb(); } catch(e){}
+    document.body.removeChild(ta);
+  }
+
+  // ---------------- Paginated wizard ----------------
+  function isStep1Valid(){ return !!(state.topic.trim() && state.structure.trim()); }
+  function isStep2Valid(){ return !!(state.principleId && state.activityId); }
+
+  var navItems = document.querySelectorAll(".stepnav li");
+  var stepCards = document.querySelectorAll(".step-card");
+  var currentStep = 1;
+  var maxStepReached = 1;
+
+  function showStep(n){
+    currentStep = n;
+    if (n > maxStepReached) maxStepReached = n;
+    stepCards.forEach(function(card){
+      card.style.display = (card.getAttribute("data-section") === String(n)) ? "" : "none";
+    });
+    navItems.forEach(function(li){
+      li.classList.toggle("active", li.getAttribute("data-step") === String(n));
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    updateProgress();
+  }
+
+  navItems.forEach(function(li){
+    li.addEventListener("click", function(){
+      var target = parseInt(li.getAttribute("data-step"), 10);
+      if (target <= maxStepReached) showStep(target);
+    });
+  });
+
+  el("next1").addEventListener("click", function(){
+    if (!isStep1Valid()){
+      if (!state.topic.trim()) el("topicField").classList.add("invalid");
+      if (!state.structure.trim()) el("structureField").classList.add("invalid");
+      return;
+    }
+    showStep(2);
+  });
+
+  el("back2").addEventListener("click", function(){ showStep(1); });
+
+  el("next2").addEventListener("click", function(){
+    if (!isStep2Valid()){
+      if (!state.principleId) el("principleWarn").style.display = "block";
+      if (!state.activityId) el("activityWarn").style.display = "block";
+      return;
+    }
+    showStep(3);
+  });
+
+  el("back3").addEventListener("click", function(){ showStep(2); });
+
+  var manualDetails = el("manualDisclosure");
+  manualDetails.addEventListener("toggle", function(){
+    el("manualToggleLabel").textContent = manualDetails.open ? "Hide manual selection ▴" : "Choose manually ▾";
+  });
+
+  function updateProgress(){
+    var step1Done = isStep1Valid();
+    var step2Done = isStep2Valid();
+    var navLis = document.querySelectorAll(".stepnav li");
+    navLis[0].classList.toggle("complete", !!step1Done);
+    navLis[1].classList.toggle("complete", !!step2Done);
+    navLis[2].classList.toggle("complete", el("outputWrap").classList.contains("show"));
+
+    var next1 = el("next1");
+    next1.disabled = !step1Done;
+    el("hint1").textContent = step1Done ? "" : "Add a topic and target structure to continue.";
+
+    var next2 = el("next2");
+    next2.disabled = !step2Done;
+    el("hint2").textContent = step2Done ? "" : "Choose a principle and an activity to continue.";
+  }
+
+  renderRecommendations();
+  showStep(1);
+})();
+</script>
+
+</body>
+</html>
