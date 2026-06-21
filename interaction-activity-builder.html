@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interaction Activity Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #f7f5f0; --card: #fff; --ink: #20242b;
+  --soft: #5b5e66; --faint: #8b8d92; --rule: #dcd6c8;
+  --navy: #1f3a5f; --navy-t: #ebf0f6; --navy-d: #16304f;
+  --ox: #7a2e2e; --ox-t: #f7ebea;
+  --gold: #a6803c;
+  --green: #1a5c3a; --green-t: #e8f5ee;
+  --serif: "Source Serif 4", Georgia, serif;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", "Courier New", monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+/* ── Header ── */
+.hdr { background: var(--card); border-bottom: 1px solid var(--rule); padding: 28px 32px 22px; }
+.hdr-in { max-width: 800px; margin: 0 auto; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ox); margin: 0 0 10px; }
+h1 { font-family: var(--serif); font-size: clamp(22px,3vw,30px); font-weight: 600; margin: 0 0 6px; letter-spacing: -.01em; }
+.dek { font-size: 13.5px; color: var(--soft); margin: 0; max-width: 600px; }
+
+/* ── Progress ── */
+.prog-bar { background: var(--card); border-bottom: 1px solid var(--rule); padding: 0 32px; }
+.prog-in { max-width: 800px; margin: 0 auto; display: flex; }
+.ps { display: flex; align-items: center; gap: 9px; padding: 13px 0; border-bottom: 2px solid transparent;
+  font-size: 12.5px; color: var(--faint); margin-right: 28px; transition: color .2s, border-color .2s; }
+.ps.on { color: var(--navy); border-bottom-color: var(--navy); font-weight: 500; }
+.ps.done { color: var(--green); }
+.pn { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid currentColor;
+  display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; flex-shrink: 0; }
+.ps.done .pn { background: var(--green); border-color: var(--green); color: #fff; font-size: 11px; }
+
+/* ── Layout ── */
+.wrap { max-width: 800px; margin: 0 auto; padding: 32px 32px 80px; }
+.stage { display: none; }
+.stage.on { display: block; }
+
+/* ── Card ── */
+.card { background: var(--card); border: 1px solid var(--rule); border-radius: 2px; padding: 26px 28px; margin-bottom: 18px; }
+.ct { font-family: var(--serif); font-size: 18px; font-weight: 600; margin: 0 0 4px; }
+.cs { font-size: 13px; color: var(--soft); margin: 0 0 22px; }
+
+/* ── Form ── */
+.field { margin-bottom: 18px; }
+.field:last-child { margin-bottom: 0; }
+label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; }
+.req { color: var(--ox); margin-left: 2px; }
+input[type=text], select {
+  width: 100%; padding: 9px 12px; font-family: var(--sans); font-size: 14px; color: var(--ink);
+  background: var(--paper); border: 1px solid var(--rule); border-radius: 2px; transition: border-color .15s;
+}
+input[type=text]:focus, select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235b5e66'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 30px; }
+.field.bad input, .field.bad select { border-color: var(--ox); }
+.hint { font-size: 11.5px; color: var(--faint); margin: 5px 0 0; }
+.wmsg { font-size: 11.5px; color: var(--ox); margin: 5px 0 0; display: none; }
+.field.bad .wmsg { display: block; }
+.r2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+/* ── Range ── */
+.rng-row { display: flex; align-items: center; gap: 12px; }
+input[type=range] { flex: 1; accent-color: var(--navy); }
+.rng-v { font-family: var(--mono); font-size: 13px; color: var(--navy); min-width: 56px; text-align: right; }
+
+/* ── Segmented ── */
+.seg { display: flex; border: 1px solid var(--rule); border-radius: 2px; overflow: hidden; }
+.seg button { flex: 1; padding: 8px 4px; background: var(--paper); border: none; border-left: 1px solid var(--rule);
+  font-family: var(--sans); font-size: 13px; color: var(--soft); cursor: pointer; transition: background .15s, color .15s; }
+.seg button:first-child { border-left: none; }
+.seg button.on { background: var(--navy); color: #fff; font-weight: 500; }
+
+/* ── Info box ── */
+.infobox { background: var(--navy-t); border-left: 3px solid var(--navy); border-radius: 0 2px 2px 0; padding: 12px 16px; font-size: 13px; color: var(--navy); margin-bottom: 18px; display: none; }
+.infobox.show { display: block; }
+
+/* ── Recommendation cards ── */
+.rec-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+.rec-card { border: 1.5px solid var(--rule); border-left: 4px solid var(--rule); border-radius: 2px; padding: 16px 18px; cursor: pointer; transition: border-color .15s, background .15s; background: var(--paper); }
+.rec-card:hover { border-color: var(--navy); }
+.rec-card.on { border-color: var(--navy); border-left-color: var(--navy); background: var(--navy-t); }
+.rec-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 7px; }
+.rec-title { font-weight: 600; font-size: 14.5px; }
+.rec-stars { font-size: 11px; color: var(--gold); letter-spacing: 1px; }
+.rec-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.tag { font-family: var(--mono); font-size: 10px; border-radius: 2px; padding: 2px 7px; letter-spacing: .04em; }
+.tag-p { color: var(--ox); background: var(--ox-t); border: 1px solid var(--ox); }
+.tag-m { color: var(--navy); background: var(--navy-t); border: 1px solid var(--navy); }
+.rec-rat { font-size: 13px; color: var(--soft); line-height: 1.5; }
+
+/* ── Override ── */
+.ov-toggle { background: none; border: none; padding: 0; font-family: var(--sans); font-size: 13px; color: var(--soft); cursor: pointer; display: flex; align-items: center; gap: 7px; }
+.ov-toggle:hover { color: var(--ink); }
+.ov-body { display: none; margin-top: 14px; }
+.ov-body.on { display: block; }
+.ov-sect-label { font-size: 12px; font-weight: 500; margin: 14px 0 8px; display: block; }
+.ov-sect-label:first-child { margin-top: 0; }
+.ov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ov-opt { border: 1px solid var(--rule); border-left: 3px solid var(--rule); border-radius: 2px; padding: 9px 11px; cursor: pointer; background: var(--paper); font-family: var(--sans); font-size: 12.5px; text-align: left; transition: border-color .15s; }
+.ov-opt:hover { border-color: var(--navy); }
+.ov-opt.on { border-color: var(--navy); border-left-color: var(--navy); background: var(--navy-t); }
+.ov-opt strong { display: block; font-size: 13px; margin-bottom: 1px; }
+.ov-opt cite { font-size: 10px; font-family: var(--mono); color: var(--ox); font-style: normal; display: block; margin-bottom: 4px; }
+.ov-opt span { font-size: 11.5px; color: var(--soft); line-height: 1.4; }
+.warn-inline { font-size: 12px; color: var(--ox); margin-top: 10px; display: none; }
+
+/* ── Summary ── */
+.sum-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 22px; }
+.sum-item { background: var(--paper); border: 1px solid var(--rule); border-radius: 2px; padding: 10px 14px; }
+.sum-lbl { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); margin-bottom: 3px; }
+.sum-val { font-size: 13.5px; font-weight: 500; }
+.sum-item.span2 { grid-column: span 2; }
+.theory-strip { background: var(--ox-t); border: 1px solid var(--ox); border-radius: 2px; padding: 12px 16px; margin-bottom: 22px; }
+.ts-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--ox); margin-bottom: 4px; }
+.ts-val { font-size: 13.5px; font-weight: 500; color: var(--ox); }
+
+/* ── Output ── */
+.out-wrap { display: none; margin-top: 22px; }
+.out-wrap.on { display: block; }
+.out-hdr { display: flex; align-items: center; justify-content: space-between; background: var(--navy); padding: 11px 16px; border-radius: 2px 2px 0 0; }
+.out-lbl { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,.7); }
+.out-text { margin: 0; padding: 20px; font-family: var(--mono); font-size: 12px; line-height: 1.7; color: var(--ink); white-space: pre-wrap; word-wrap: break-word; background: #fffefb; border: 1px solid var(--rule); border-top: none; max-height: 480px; overflow-y: auto; border-radius: 0 0 2px 2px; }
+
+/* ── Buttons ── */
+.nav-row { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--rule); }
+.btn { font-family: var(--sans); font-size: 13.5px; font-weight: 500; padding: 9px 20px; border-radius: 2px; border: none; cursor: pointer; transition: background .15s; }
+.btn-p { background: var(--navy); color: #fff; }
+.btn-p:hover { background: var(--navy-d); }
+.btn-g { background: transparent; color: var(--soft); border: 1px solid var(--rule); }
+.btn-g:hover { background: var(--paper); color: var(--ink); }
+.btn-gen { font-family: var(--serif); font-size: 16px; font-weight: 600; background: var(--navy); color: #fff; padding: 12px 28px; border: none; border-radius: 2px; cursor: pointer; }
+.btn-gen:hover { background: var(--navy-d); }
+.btn-copy { font-size: 12.5px; font-weight: 500; color: var(--navy); background: var(--navy-t); border: 1px solid var(--navy); padding: 6px 13px; border-radius: 2px; cursor: pointer; }
+.btn-copy:hover { background: #dde7f1; }
+.btn-copy.ok { background: var(--navy); color: #fff; }
+
+footer { text-align: center; font-size: 11.5px; color: var(--faint); padding: 0 32px 36px; }
+
+@media (max-width: 600px) {
+  .r2, .sum-grid, .ov-grid { grid-template-columns: 1fr; }
+  .sum-item.span2 { grid-column: span 1; }
+  .wrap { padding: 22px 18px 60px; }
+  .hdr, .prog-bar { padding-left: 18px; padding-right: 18px; }
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <p class="eyebrow">Interaction Activity Builder · Evidence-informed prompt design</p>
+    <h1>Classroom Interaction Activity Builder</h1>
+    <p class="dek">Three stages: describe your lesson → get SLA-matched recommendations → generate a classroom activity prompt with teacher instructions and student materials.</p>
+  </div>
+</header>
+
+<nav class="prog-bar" aria-label="Stages">
+  <div class="prog-in">
+    <div class="ps on" id="ps1"><div class="pn" id="pn1">1</div>Lesson context</div>
+    <div class="ps" id="ps2"><div class="pn" id="pn2">2</div>Recommendations</div>
+    <div class="ps" id="ps3"><div class="pn" id="pn3">3</div>Generate</div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ─── STAGE 1 ─── -->
+<div class="stage on" id="s1">
+  <div class="card">
+    <div class="ct">Lesson context</div>
+    <p class="cs">These inputs drive the recommendation engine on the next page. The more specific, the better the match.</p>
+
+    <div class="r2">
+      <div class="field">
+        <label for="level">CEFR level</label>
+        <select id="level">
+          <option value="A1">A1 — Beginner</option>
+          <option value="A2">A2 — Elementary</option>
+          <option value="B1" selected>B1 — Intermediate</option>
+          <option value="B2">B2 — Upper Intermediate</option>
+          <option value="C1">C1 — Advanced</option>
+          <option value="C2">C2 — Proficient</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="dur">Activity duration</label>
+        <div class="rng-row">
+          <input type="range" id="dur" min="10" max="60" step="5" value="20">
+          <span class="rng-v" id="durv">20 min</span>
+        </div>
+        <p class="hint">Time for this activity only, not the whole lesson.</p>
+      </div>
+    </div>
+
+    <div class="field" id="f-topic">
+      <label for="topic">Topic <span class="req">*</span></label>
+      <input type="text" id="topic" placeholder="e.g., making plans, shopping, job interviews, travel">
+      <p class="wmsg">Please enter a topic.</p>
+    </div>
+
+    <div class="field" id="f-struct">
+      <label for="struct">Target language structure <span class="req">*</span></label>
+      <input type="text" id="struct" placeholder="e.g., going to for future plans, present perfect for experience, modal verbs for advice">
+      <p class="wmsg">Please enter a target structure.</p>
+    </div>
+
+    <div class="r2" style="margin-bottom:18px">
+      <div class="field">
+        <label>Skill focus</label>
+        <div class="seg" role="group" aria-label="Skill">
+          <button type="button" data-k="skill" data-v="Speaking" class="seg-btn on">Speaking</button>
+          <button type="button" data-k="skill" data-v="Listening" class="seg-btn">Listening</button>
+          <button type="button" data-k="skill" data-v="Reading" class="seg-btn">Reading</button>
+          <button type="button" data-k="skill" data-v="Writing" class="seg-btn">Writing</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Lesson phase</label>
+        <div class="seg" role="group" aria-label="Phase">
+          <button type="button" data-k="phase" data-v="presentation" class="seg-btn">Presentation</button>
+          <button type="button" data-k="phase" data-v="practice" class="seg-btn on">Practice</button>
+          <button type="button" data-k="phase" data-v="production" class="seg-btn">Production</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Class format</label>
+      <div class="seg" role="group" aria-label="Format">
+        <button type="button" data-k="format" data-v="individual" class="seg-btn">Individual</button>
+        <button type="button" data-k="format" data-v="pair" class="seg-btn on">Pairs</button>
+        <button type="button" data-k="format" data-v="group" class="seg-btn">Groups (3–5)</button>
+        <button type="button" data-k="format" data-v="wholeclass" class="seg-btn">Whole class</button>
+      </div>
+      <p class="hint">Who interacts with whom. This filters which interaction mechanics are available.</p>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <span></span>
+    <button class="btn btn-p" id="next1">Next: get recommendations →</button>
+  </div>
+</div>
+
+<!-- ─── STAGE 2 ─── -->
+<div class="stage" id="s2">
+  <div class="card">
+    <div class="ct">Recommended combinations</div>
+    <p class="cs" id="rec-sub"></p>
+
+    <div class="infobox" id="infobox-ind">
+      <strong>Individual format note:</strong> Interaction activities require at least two participants. These recommendations assume a Think→Pair→Share or individual-then-class structure where individual preparation leads to interaction. If this is a fully solo task, consider the original <em>Gamified Activity Builder</em> for self-paced tools instead.
+    </div>
+
+    <div class="rec-grid" id="recGrid"></div>
+
+    <button class="ov-toggle" id="ov-btn" type="button">
+      <span id="ov-arr">▶</span> Browse all options manually instead
+    </button>
+    <div class="ov-body" id="ov-body">
+      <span class="ov-sect-label">SLA principle</span>
+      <div class="ov-grid" id="pg"></div>
+      <span class="ov-sect-label">Interaction mechanic</span>
+      <div class="ov-grid" id="mg"></div>
+    </div>
+    <p class="warn-inline" id="recWarn">Please select a combination above before continuing.</p>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-g" id="back2">← Back</button>
+    <button class="btn btn-p" id="next2">Next: review & generate →</button>
+  </div>
+</div>
+
+<!-- ─── STAGE 3 ─── -->
+<div class="stage" id="s3">
+  <div class="card">
+    <div class="ct">Your choices</div>
+    <p class="cs">Review before generating. Go back to change anything.</p>
+    <div class="sum-grid" id="sumGrid"></div>
+    <div class="theory-strip" id="theoryStrip"></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Generate prompt</div>
+    <p class="cs">This prompt instructs Claude to build a <strong>classroom interaction activity</strong> — with teacher setup instructions and student materials — not a solo digital game.</p>
+    <button class="btn-gen" id="genBtn">Generate prompt</button>
+    <div class="out-wrap" id="outWrap">
+      <div class="out-hdr">
+        <span class="out-lbl">Prompt — paste into Claude</span>
+        <button class="btn-copy" id="copyBtn">Copy</button>
+      </div>
+      <pre class="out-text" id="outText"></pre>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-g" id="back3">← Back</button>
+    <span style="font-size:12px;color:var(--faint)">Review every generated activity before classroom use.</span>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+<footer>Built for lesson preparation · Review generated activities before use.</footer>
+
+<script>
+(function(){
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+var S = {
+  level:'B1', dur:20, topic:'', struct:'',
+  skill:'Speaking', phase:'practice', format:'pair',
+  pid:null, mid:null, fromRec:null
+};
+
+/* ══════════════════════════════════════
+   DATA — SLA PRINCIPLES
+══════════════════════════════════════ */
+var PRINCIPLES = [
+  { id:'input', name:'Comprehensible Input', cite:'Krashen, 1985',
+    desc:'Acquisition happens when input is slightly beyond the learner\'s current level and meaning is recoverable from context.',
+    apply:function(s){ return 'Provide language input at i+1 — just above '+s.level+' — making meaning recoverable through context, visuals, or repetition. Avoid metalinguistic explanation. The target structure should appear naturally in comprehensible context before learners produce it.'; }
+  },
+  { id:'output', name:'Output Hypothesis', cite:'Swain, 1985/1995',
+    desc:'Producing language — not just receiving it — forces learners to notice gaps between what they want to say and what they can say.',
+    apply:function(s){ return 'Require learners to actively produce '+s.struct+' at each stage. Include at least one moment where they must reformulate or extend their own utterance — not just recognise or select from options. Create conditions where producing the structure is necessary to complete the task.'; }
+  },
+  { id:'noticing', name:'Noticing Hypothesis', cite:'Schmidt, 1990',
+    desc:'A form must be consciously attended to before it can be acquired. Unconscious exposure alone is not enough.',
+    apply:function(s){ return 'Direct explicit attention to '+s.struct+' at a key moment: by highlighting it in a model, contrasting correct with incorrect forms, or asking learners to find it in use before they produce it. The noticing moment should be brief and embedded in the task.'; }
+  },
+  { id:'interaction', name:'Interaction Hypothesis', cite:'Long, 1996',
+    desc:'Negotiating meaning with another speaker — through clarification, confirmation checks, and recasts — drives interlanguage development.',
+    apply:function(s){ return 'Build in genuine communicative need so learners must negotiate meaning to complete the task. Design conditions where misunderstanding is possible and where asking for clarification or confirming understanding requires the use of '+s.struct+'. Peer interaction, not self-assessment, is the mechanism.'; }
+  },
+  { id:'fof', name:'Focus on Form', cite:'Long, 1991; DeKeyser, 2007',
+    desc:'Brief, integrated attention to a grammatical form inside a meaning-focused task helps that form become automatic.',
+    apply:function(s){ return 'Embed short, targeted attention to '+s.struct+' inside the communicative task — not as an isolated drill beforehand. Provide form-focused feedback during or immediately after the student has successfully conveyed meaning. The task goal is communicative; the form attention is integrated, not the primary focus.'; }
+  },
+  { id:'sct', name:'Sociocultural Theory (ZPD)', cite:'Vygotsky / Lantolf et al., 2020',
+    desc:'Learners accomplish more with structured support than alone. Support should be explicit early and fade as competence grows.',
+    apply:function(s){ return 'Provide scaffolding (sentence starters, model utterances, prompt cards) that makes the task achievable at '+s.level+'. Structure the activity so support is visible at the start and gradually withdrawn: heavy scaffolding in stage 1, partial in stage 2, none in stage 3. Mediation comes from task design, not constant teacher intervention.'; }
+  }
+];
+
+/* ══════════════════════════════════════
+   DATA — INTERACTION MECHANICS
+══════════════════════════════════════ */
+var MECHANICS = [
+  { id:'infogap', name:'Information gap',
+    formats:['pair','group'], skills:['Speaking','Listening'],
+    desc:'Each student holds different information. Speaking is the only way to complete a shared task.',
+    apply:function(s){ return 'Create two (or more) partially overlapping information cards. Each student has data the other needs. They exchange using '+s.struct+' to complete a shared grid, schedule, or map. Strict rule: no showing cards. A model exchange should be available as a reference.'; }
+  },
+  { id:'roleplay', name:'Role-play',
+    formats:['pair','group'], skills:['Speaking','Listening'],
+    desc:'Students take defined roles in a realistic scenario and must interact to reach a shared outcome.',
+    apply:function(s){ return 'Assign clear roles, each with a specific goal that requires negotiation. The scenario must logically require '+s.struct+'. Provide a brief model dialogue at '+s.level+', a list of 4–6 useful phrases, and a role card for each participant. A debrief task (e.g. report what was agreed) ensures accountability.'; }
+  },
+  { id:'jigsaw', name:'Jigsaw',
+    formats:['group'], skills:['Speaking','Listening','Reading'],
+    desc:'Each student reads or hears different content, then shares to build a complete group picture.',
+    apply:function(s){ return 'Divide content into segments — one per student. Each person becomes the expert on their part and must explain it to the group using '+s.struct+'. Provide a shared summary grid the group completes together. Learners cannot complete the grid without listening carefully to each other.'; }
+  },
+  { id:'debate', name:'Structured discussion',
+    formats:['pair','group','wholeclass'], skills:['Speaking','Listening'],
+    desc:'Students exchange and defend opinions using the target structure as the vehicle for argument.',
+    apply:function(s){ return 'Assign contrasting positions or provide discussion questions that require '+s.struct+' to answer. Give opinion-stem cards students must complete before speaking. Use a structured turn format (e.g. 60 seconds to argue, 30 seconds to respond). Whole-class debrief consolidates accurate form use.'; }
+  },
+  { id:'task', name:'Problem-solving task',
+    formats:['pair','group'], skills:['Speaking','Listening','Writing'],
+    desc:'Groups work together toward a shared decision, using the target language as the practical tool.',
+    apply:function(s){ return 'Frame a real problem with no single right answer. The task must logically require '+s.struct+' to discuss and decide. Include a decision-recording sheet students complete together. A comparison stage (groups share decisions with the class) provides additional production and listening practice.'; }
+  },
+  { id:'gallery', name:'Gallery walk',
+    formats:['group','wholeclass'], skills:['Speaking','Listening','Reading','Writing'],
+    desc:'Students circulate, read posted content, and discuss using the target structure.',
+    apply:function(s){ return 'Post 4–6 stimulus texts, images, or prompts around the room. Students move in pairs, using '+s.struct+' to discuss each. Provide a response card they carry and complete as they circulate. A whole-class debrief compares responses and focuses on accurate use of the target structure.'; }
+  },
+  { id:'tps', name:'Think–Pair–Share',
+    formats:['individual','pair','wholeclass'], skills:['Speaking','Listening','Writing'],
+    desc:'Individual preparation, then pair discussion, then whole-class sharing — in three timed stages.',
+    apply:function(s){ return 'Stage 1 — Think (2–3 min): students write their individual response using '+s.struct+'. Stage 2 — Pair (3–4 min): partners compare answers and discuss differences. Stage 3 — Share (5 min): pairs report one key point to the class. Teacher provides form-focused feedback in the debrief.'; }
+  },
+  { id:'spotdiff', name:'Spot the difference',
+    formats:['pair'], skills:['Speaking','Listening'],
+    desc:'Partners describe near-identical visuals to find differences — no looking at each other\'s images.',
+    apply:function(s){ return 'Create two images with 5–8 deliberate differences. Partners sit back-to-back or use a barrier. They describe what they see using '+s.struct+' and identify differences through description only. Provide a language box with key descriptive phrases. Students record differences on a shared answer sheet.'; }
+  }
+];
+
+/* ══════════════════════════════════════
+   SCORING ENGINE
+══════════════════════════════════════ */
+var PHASE_P = {
+  presentation: ['input','noticing','sct'],
+  practice: ['fof','output','noticing','interaction'],
+  production: ['output','interaction','sct']
+};
+var LEVEL_P = {
+  A1:['input','sct'], A2:['input','sct','noticing'],
+  B1:['fof','output','noticing'], B2:['output','interaction','fof'],
+  C1:['interaction','output'], C2:['interaction','output']
+};
+
+function score(p, m, s) {
+  var effectiveFmt = s.format === 'individual' ? 'pair' : s.format;
+  if (m.formats.indexOf(effectiveFmt) === -1) return -1; // hard filter
+  var sc = 0;
+  if (m.skills.indexOf(s.skill) !== -1) sc += 3;
+  if ((PHASE_P[s.phase]||[]).indexOf(p.id) !== -1) sc += 3;
+  if ((LEVEL_P[s.level]||[]).indexOf(p.id) !== -1) sc += 2;
+  // Contextual bonuses
+  if (p.id==='interaction' && s.skill==='Speaking' && effectiveFmt!=='individual') sc += 2;
+  if (p.id==='sct' && (s.level==='A1'||s.level==='A2')) sc += 2;
+  if (p.id==='output' && s.skill==='Speaking' && s.phase!=='presentation') sc += 1;
+  if (m.id==='infogap' && s.skill==='Speaking') sc += 1;
+  if (m.id==='roleplay' && s.skill==='Speaking') sc += 1;
+  if (m.id==='tps' && s.format==='individual') sc += 3; // TPS is ideal for individual→class bridge
+  return sc;
+}
+
+function getRecs() {
+  var combos = [];
+  PRINCIPLES.forEach(function(p){
+    MECHANICS.forEach(function(m){
+      var sc = score(p, m, S);
+      if (sc >= 0) combos.push({p:p, m:m, sc:sc});
+    });
+  });
+  combos.sort(function(a,b){ return b.sc - a.sc; });
+  // Diversify: prefer different mechanics in top 3
+  var usedM = {}, result = [];
+  for (var i=0; i<combos.length && result.length<3; i++) {
+    if (!usedM[combos[i].m.id]) { usedM[combos[i].m.id]=true; result.push(combos[i]); }
+  }
+  // Fallback if fewer than 3 found
+  for (var i=0; i<combos.length && result.length<3; i++) {
+    if (result.indexOf(combos[i])===-1) result.push(combos[i]);
+  }
+  return result;
+}
+
+/* ══════════════════════════════════════
+   RECOMMENDATION COPY
+══════════════════════════════════════ */
+var REC_TITLES = {
+  'interaction_infogap':'Negotiated information exchange',
+  'interaction_roleplay':'Communicative role-play',
+  'interaction_task':'Collaborative decision task',
+  'output_roleplay':'Pushed-output role-play',
+  'output_tps':'Think, produce, share',
+  'output_infogap':'Productive information gap',
+  'fof_infogap':'Form-focused information gap',
+  'fof_roleplay':'Accuracy-monitored role-play',
+  'fof_tps':'Form-focused discussion',
+  'fof_debate':'Structured discussion with form focus',
+  'sct_infogap':'Scaffolded information exchange',
+  'sct_roleplay':'Guided role-play with fading support',
+  'sct_tps':'Scaffolded think–pair–share',
+  'noticing_spotdiff':'Notice and describe task',
+  'noticing_gallery':'Form-spotting gallery walk',
+  'noticing_debate':'Spot and discuss task',
+  'input_jigsaw':'Comprehensible jigsaw',
+  'input_gallery':'Input-rich gallery walk',
+  'input_tps':'Input then produce'
+};
+
+function recTitle(p,m){ return REC_TITLES[p.id+'_'+m.id] || m.name+' — '+p.name; }
+function stars(sc){ return sc>=13?'★★★★★':sc>=10?'★★★★☆':'★★★☆☆'; }
+
+function recRat(p,m,s) {
+  var parts=[];
+  // Principle rationale
+  if (p.id==='interaction') parts.push(s.level+' learners at '+s.phase+' stage benefit from tasks that create genuine communicative need. '+m.name+' makes interaction necessary to complete the task, not optional.');
+  else if (p.id==='output') parts.push('At '+s.phase+' stage, pushing learners to produce rather than recognise '+s.struct+' exposes gaps and accelerates form accuracy.');
+  else if (p.id==='fof') parts.push('Embedding brief attention to '+s.struct+' inside a communicative task keeps the meaning focus while building form accuracy — especially effective at '+s.level+'.');
+  else if (p.id==='sct') parts.push(s.level+' learners perform significantly better with structured support that fades through the activity. '+m.name+' allows this scaffolding to be designed into the task itself.');
+  else if (p.id==='noticing') parts.push('Learners cannot internalise what they have not consciously noticed. '+m.name+' creates a natural moment to direct attention to '+s.struct+' before or during production.');
+  else if (p.id==='input') parts.push('Before producing '+s.struct+', learners at '+s.level+' need comprehensible input where the structure is salient. '+m.name+' provides rich input as the task foundation.');
+  // Format rationale
+  if (s.format==='pair') parts.push('Pair format maximises speaking time per student — every learner produces language throughout, not just when called on.');
+  else if (s.format==='group') parts.push('Group work creates authentic audience and negotiated turn-taking, making the interaction more genuinely communicative.');
+  else if (s.format==='wholeclass') parts.push('Whole-class format gives the teacher visibility over all student production and allows targeted feedback moments.');
+  else if (s.format==='individual') parts.push('The individual preparation stage ensures all learners are ready before the communicative phase — reducing anxiety and improving output quality.');
+  return parts.slice(0,2).join(' ');
+}
+
+/* ══════════════════════════════════════
+   RENDER STAGE 2
+══════════════════════════════════════ */
+function renderStage2() {
+  // Subtitle
+  document.getElementById('rec-sub').textContent =
+    'Matched to: '+S.level+' · '+S.skill+' · '+S.phase+' phase · '+fmtLbl(S.format)+' format.';
+  // Individual hint
+  var ib = document.getElementById('infobox-ind');
+  ib.classList.toggle('show', S.format==='individual');
+  // Recs
+  var recs = getRecs();
+  S._recs = recs;
+  var grid = document.getElementById('recGrid');
+  grid.innerHTML='';
+  recs.forEach(function(rec,i){
+    var d = document.createElement('div');
+    d.className='rec-card';
+    d.setAttribute('data-i',i);
+    d.innerHTML=
+      '<div class="rec-top"><div class="rec-title">'+recTitle(rec.p,rec.m)+'</div><div class="rec-stars">'+stars(rec.sc)+'</div></div>'+
+      '<div class="rec-tags"><span class="tag tag-p">'+rec.p.name+' · '+rec.p.cite+'</span><span class="tag tag-m">'+rec.m.name+'</span></div>'+
+      '<div class="rec-rat">'+recRat(rec.p,rec.m,S)+'</div>';
+    d.addEventListener('click',function(){
+      grid.querySelectorAll('.rec-card').forEach(function(c){c.classList.remove('on');});
+      document.querySelectorAll('.ov-opt').forEach(function(c){c.classList.remove('on');});
+      d.classList.add('on');
+      S.pid=rec.p.id; S.mid=rec.m.id; S.fromRec='rec'+i;
+      document.getElementById('recWarn').style.display='none';
+    });
+    grid.appendChild(d);
+  });
+  // Manual override grids
+  renderOvGrid('pg', PRINCIPLES, 'p');
+  renderOvGrid('mg', MECHANICS, 'm');
+}
+
+function renderOvGrid(cid, items, type) {
+  var c = document.getElementById(cid);
+  c.innerHTML='';
+  items.forEach(function(item){
+    var btn = document.createElement('button');
+    btn.type='button';
+    btn.className='ov-opt';
+    btn.setAttribute('data-id',item.id);
+    btn.innerHTML='<strong>'+item.name+'</strong>'+(item.cite?'<cite>'+item.cite+'</cite>':'')+
+      '<span>'+item.desc+'</span>';
+    btn.addEventListener('click',function(){
+      c.querySelectorAll('.ov-opt').forEach(function(o){o.classList.remove('on');});
+      btn.classList.add('on');
+      if (type==='p') S.pid=item.id; else S.mid=item.id;
+      S.fromRec='manual';
+      document.querySelectorAll('.rec-card').forEach(function(rc){rc.classList.remove('on');});
+      document.getElementById('recWarn').style.display='none';
+    });
+    c.appendChild(btn);
+  });
+}
+
+/* ══════════════════════════════════════
+   RENDER STAGE 3
+══════════════════════════════════════ */
+function renderStage3() {
+  var p=find(PRINCIPLES,S.pid), m=find(MECHANICS,S.mid);
+  var items=[
+    {l:'Level',v:S.level}, {l:'Skill',v:S.skill},
+    {l:'Phase',v:cap(S.phase)}, {l:'Format',v:fmtLbl(S.format)},
+    {l:'Duration',v:S.dur+' min'},
+    {l:'Topic',v:S.topic,span:true},
+    {l:'Target structure',v:S.struct,span:true}
+  ];
+  document.getElementById('sumGrid').innerHTML=items.map(function(it){
+    return '<div class="sum-item'+(it.span?' span2':'')+'">'+'<div class="sum-lbl">'+it.l+'</div>'+'<div class="sum-val">'+it.v+'</div></div>';
+  }).join('');
+  document.getElementById('theoryStrip').innerHTML=
+    '<div class="ts-label">Selected combination</div>'+
+    '<div class="ts-val">'+(p?p.name:'?')+' ('+( p?p.cite:'')+') &nbsp;+&nbsp; '+(m?m.name:'?')+'</div>';
+}
+
+/* ══════════════════════════════════════
+   BUILD PROMPT
+══════════════════════════════════════ */
+function buildPrompt() {
+  var p=find(PRINCIPLES,S.pid), m=find(MECHANICS,S.mid);
+  var L=[];
+  L.push('You are an expert ELT materials designer. Create a complete, classroom-ready interaction activity.');
+  L.push('');
+  L.push('LESSON CONTEXT');
+  L.push('— CEFR level: '+S.level);
+  L.push('— Topic: '+S.topic);
+  L.push('— Target language structure: '+S.struct);
+  L.push('— Primary skill: '+S.skill);
+  L.push('— Lesson phase: '+S.phase+' (within a PPP or task-based lesson — not the first introduction of the structure)');
+  L.push('— Class format: '+fmtLbl(S.format));
+  L.push('— Available time for this activity: '+S.dur+' minutes');
+  L.push('');
+  L.push('THEORETICAL FOUNDATION');
+  L.push('— SLA principle: '+p.name+' ('+p.cite+')');
+  L.push('— What this means: '+p.desc);
+  L.push('— How to apply it in this activity: '+p.apply(S));
+  L.push('');
+  L.push('ACTIVITY FORMAT');
+  L.push('— Interaction type: '+m.name);
+  L.push('— How to implement: '+m.apply(S));
+  L.push('');
+  L.push('OUTPUT FORMAT');
+  L.push('Produce a single self-contained HTML file with two clearly separated sections:');
+  L.push('');
+  L.push('SECTION A — TEACHER INSTRUCTIONS (not for students to read)');
+  L.push('  1. Activity overview (3 sentences max)');
+  L.push('  2. Materials needed: list everything — printed cards, board space, barriers, timer');
+  L.push('  3. Setup and procedure: step-by-step with timing for each step, totalling '+S.dur+' minutes');
+  L.push('  4. Language monitoring guide: what to listen for, 3 example target-structure uses, 3 common errors to watch for');
+  L.push('  5. Contingency: what to do if students finish early / if a pair or group struggles');
+  L.push('');
+  L.push('SECTION B — STUDENT MATERIALS (printable / projectable)');
+  L.push('  1. Task instructions in clear '+S.level+'-appropriate English (no metalanguage)');
+  L.push('  2. All required materials for the '+m.name+' format — role cards, information cards, task prompts, etc.');
+  L.push('  3. One worked example using '+S.struct+' in context');
+  L.push('  4. A language box: 4–6 sentence starters or useful phrases, calibrated to '+S.level);
+  L.push('  5. A brief accountability task at the end (e.g. write one thing you learned / report your group\'s decision)');
+  L.push('');
+  L.push('DESIGN CONSTRAINTS');
+  L.push('— One HTML file, no external libraries, no network requests, printable with Ctrl+P');
+  L.push('— Teacher section visually distinct from student materials (different background, clearly labelled)');
+  L.push('— All vocabulary, instructions and examples calibrated to '+S.level);
+  L.push('— The activity must create genuine communicative need: students interact because the task requires it, not as optional practice');
+  L.push('— The '+p.name+' principle must be visible in the task design — embedded in the mechanics, not just mentioned in a heading');
+  L.push('— Total student interaction time should genuinely fill '+S.dur+' minutes at a realistic classroom pace');
+  L.push('— Do not include any game elements (points, timers, leaderboards) — this is a teacher-run classroom task, not a self-paced game');
+  return L.join('\n');
+}
+
+/* ══════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════ */
+function goTo(n) {
+  for (var i=1;i<=3;i++) {
+    document.getElementById('s'+i).classList.toggle('on',i===n);
+    var ps=document.getElementById('ps'+i);
+    ps.classList.remove('on','done');
+    if (i<n) { ps.classList.add('done'); document.getElementById('pn'+i).textContent='✓'; }
+    else if (i===n) { ps.classList.add('on'); document.getElementById('pn'+i).textContent=i; }
+    else { document.getElementById('pn'+i).textContent=i; }
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function next1() {
+  var ok=true;
+  if (!S.topic.trim()) { document.getElementById('f-topic').classList.add('bad'); ok=false; }
+  if (!S.struct.trim()) { document.getElementById('f-struct').classList.add('bad'); ok=false; }
+  if (!ok) return;
+  S.pid=null; S.mid=null; S.fromRec=null;
+  renderStage2();
+  goTo(2);
+}
+
+function next2() {
+  if (!S.pid||!S.mid) { document.getElementById('recWarn').style.display='block'; return; }
+  renderStage3();
+  goTo(3);
+}
+
+function generate() {
+  var txt=buildPrompt();
+  document.getElementById('outText').textContent=txt;
+  document.getElementById('outWrap').classList.add('on');
+  setTimeout(function(){ document.getElementById('outWrap').scrollIntoView({behavior:'smooth',block:'nearest'}); },50);
+}
+
+function doCopy() {
+  var txt=document.getElementById('outText').textContent, btn=document.getElementById('copyBtn');
+  function ok(){ btn.textContent='Copied'; btn.classList.add('ok'); setTimeout(function(){ btn.textContent='Copy'; btn.classList.remove('ok'); },1800); }
+  if (navigator.clipboard&&navigator.clipboard.writeText) { navigator.clipboard.writeText(txt).then(ok).catch(function(){ fb(txt,ok); }); }
+  else fb(txt,ok);
+}
+function fb(txt,cb){ var ta=document.createElement('textarea'); ta.value=txt; ta.style.cssText='position:fixed;left:-9999px'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');cb();}catch(e){} document.body.removeChild(ta); }
+
+/* ══════════════════════════════════════
+   HELPERS
+══════════════════════════════════════ */
+function find(list,id){ for(var i=0;i<list.length;i++) if(list[i].id===id) return list[i]; return null; }
+function fmtLbl(f){ return {pair:'Pairs',group:'Groups',wholeclass:'Whole class',individual:'Individual'}[f]||f; }
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+/* ══════════════════════════════════════
+   EVENT LISTENERS
+══════════════════════════════════════ */
+document.getElementById('next1').addEventListener('click', next1);
+document.getElementById('back2').addEventListener('click', function(){ goTo(1); });
+document.getElementById('next2').addEventListener('click', next2);
+document.getElementById('back3').addEventListener('click', function(){ goTo(2); });
+document.getElementById('genBtn').addEventListener('click', generate);
+document.getElementById('copyBtn').addEventListener('click', doCopy);
+document.getElementById('ov-btn').addEventListener('click', function(){
+  var b=document.getElementById('ov-body'); var open=b.classList.toggle('on');
+  document.getElementById('ov-arr').textContent=open?'▼':'▶';
+});
+
+document.getElementById('level').addEventListener('change',function(e){ S.level=e.target.value; });
+document.getElementById('dur').addEventListener('input',function(e){ S.dur=+e.target.value; document.getElementById('durv').textContent=e.target.value+' min'; });
+document.getElementById('topic').addEventListener('input',function(e){ S.topic=e.target.value; if(e.target.value.trim()) document.getElementById('f-topic').classList.remove('bad'); });
+document.getElementById('struct').addEventListener('input',function(e){ S.struct=e.target.value; if(e.target.value.trim()) document.getElementById('f-struct').classList.remove('bad'); });
+
+// Segmented controls
+document.querySelectorAll('.seg-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var parent=btn.closest('.seg');
+    parent.querySelectorAll('.seg-btn').forEach(function(b){b.classList.remove('on');});
+    btn.classList.add('on');
+    S[btn.getAttribute('data-k')]=btn.getAttribute('data-v');
+  });
+});
+
+})();
+</script>
+</body>
+</html>
